@@ -8,7 +8,7 @@ export default function Produtos() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/produtos')
+    fetch(`${import.meta.env.VITE_API_URL}/api/produtos`)
       .then(res => res.json())
       .then(data => {
         setProdutos(data)

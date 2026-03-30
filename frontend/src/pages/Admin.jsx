@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 
+const API = import.meta.env.VITE_API_URL
+
 export default function Admin() {
   const [aba, setAba] = useState('pedidos')
   const [pedidos, setPedidos] = useState([])
@@ -7,17 +9,17 @@ export default function Admin() {
   const [novoProduto, setNovoProduto] = useState({ nome: '', descricao: '', preco: '', imagem: '', estoque: '' })
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/pedidos')
+    fetch(`${API}/api/pedidos`)
       .then(res => res.json())
       .then(data => setPedidos(data))
 
-    fetch('http://localhost:3000/api/produtos')
+    fetch(`${API}/api/produtos`)
       .then(res => res.json())
       .then(data => setProdutos(data))
   }, [])
 
   async function handleAdicionarProduto() {
-    const res = await fetch('http://localhost:3000/api/produtos', {
+    const res = await fetch(`${API}/api/produtos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(novoProduto)
@@ -31,8 +33,6 @@ export default function Admin() {
   return (
     <div className="max-w-6xl mx-auto py-12 px-6">
       <h1 className="text-4xl font-bold mb-8 text-gray-800 dark:text-white">Painel Admin</h1>
-
-      {/* Abas */}
       <div className="flex gap-4 mb-8">
         <button onClick={() => setAba('pedidos')}
           className={`px-6 py-2 rounded-lg font-bold ${aba === 'pedidos' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white'}`}>
@@ -43,8 +43,6 @@ export default function Admin() {
           Produtos
         </button>
       </div>
-
-      {/* Aba Pedidos */}
       {aba === 'pedidos' && (
         <div className="space-y-4">
           {pedidos.length === 0 && <p className="text-gray-500">Nenhum pedido ainda.</p>}
@@ -62,8 +60,6 @@ export default function Admin() {
           ))}
         </div>
       )}
-
-      {/* Aba Produtos */}
       {aba === 'produtos' && (
         <div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-8">
@@ -85,7 +81,6 @@ export default function Admin() {
               Adicionar Produto
             </button>
           </div>
-
           <div className="space-y-4">
             {produtos.map(p => (
               <div key={p.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow flex items-center gap-4">
