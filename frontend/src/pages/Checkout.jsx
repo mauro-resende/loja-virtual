@@ -1,6 +1,16 @@
 import { useCart } from '../context/CartContext'
 import { useState } from 'react'
 
+const API = 'https://loja-virtual-production-6241.up.railway.app'
+
+const ORDER_BUMP = {
+  id: 'bump-1',
+  nome: 'Kit Proteção Premium',
+  descricao: 'Capa protetora + película de vidro temperado. Complemento perfeito para seu pedido!',
+  preco: 29.90,
+  quantidade: 1
+}
+
 export default function Checkout() {
   const { itens, total } = useCart()
   const [form, setForm] = useState({
@@ -9,25 +19,31 @@ export default function Checkout() {
   })
   const [pagamento, setPagamento] = useState('pix')
   const [enviando, setEnviando] = useState(false)
+  const [aceitouBump, setAceitouBump] = useState(false)
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
+  function totalFinal() {
+    return total() + (aceitouBump ? ORDER_BUMP.preco : 0)
+  }
+
   async function handleConfirmar() {
     setEnviando(true)
+    const itensFinal = aceitouBump ? [...itens, ORDER_BUMP] : itens
     try {
-      await fetch('http://localhost:3000/api/pedidos', {
+      await fetch(`${API}/api/pedidos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, pagamento, total: total(), itens })
+        body: JSON.stringify({ ...form, pagamento, total: totalFinal(), itens: itensFinal })
       })
 
-      const resPagamento = await fetch('http://localhost:3000/api/pagamento/criar-preferencia', {
+      const resPagamento = await fetch(`${API}/api/pagamento/criar-preferencia`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          itens,
+          itens: itensFinal,
           pagador: { nome: form.nome, email: form.email, telefone: form.telefone }
         })
       })
@@ -90,6 +106,36 @@ export default function Checkout() {
               ))}
             </div>
           </div>
+
+          {/* ORDER BUMP */}
+          <div
+            onClick={() => setAceitouBump(!aceitouBump)}
+            className={`cursor-pointer border-2 rounded-xl p-5 transition-all ${
+              aceitouBump
+                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                : 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20'
+            }`}
+          >
+            <div className="flex items-start gap-4">
+              <input
+                type="checkbox"
+                checked={aceitouBump}
+                onChange={() => setAceitouBump(!aceitouBump)}
+                className="mt-1 w-5 h-5 accent-green-500"
+                onClick={e => e.stopPropagation()}
+              />
+              <div>
+                <p className="text-xs font-bold uppercase text-yellow-600 dark:text-yellow-400 mb-1">
+                  Oferta especial — adicione ao seu pedido agora
+                </p>
+                <p className="font-bold text-gray-800 dark:text-white text-lg">{ORDER_BUMP.nome}</p>
+                <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">{ORDER_BUMP.descricao}</p>
+                <p className="mt-2 text-green-600 dark:text-green-400 font-bold text-lg">
+                  + R$ {ORDER_BUMP.preco.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -102,10 +148,16 @@ export default function Checkout() {
                   <span>R$ {(parseFloat(item.preco) * item.quantidade).toFixed(2)}</span>
                 </div>
               ))}
+              {aceitouBump && (
+                <div className="flex justify-between text-green-600 dark:text-green-400 font-medium">
+                  <span>{ORDER_BUMP.nome} x1</span>
+                  <span>R$ {ORDER_BUMP.preco.toFixed(2)}</span>
+                </div>
+              )}
             </div>
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4 flex justify-between font-bold text-lg">
               <span className="text-gray-800 dark:text-white">Total</span>
-              <span className="text-blue-600">R$ {total().toFixed(2)}</span>
+              <span className="text-blue-600">R$ {totalFinal().toFixed(2)}</span>
             </div>
             <button onClick={handleConfirmar} disabled={enviando}
               className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-bold disabled:opacity-50">
