@@ -9,9 +9,9 @@ export function CartProvider({ children }) {
     setItens(prev => {
       const existe = prev.find(i => i.id === produto.id)
       if (existe) {
-        return prev.map(i => i.id === produto.id ? { ...i, quantidade: i.quantidade + 1 } : i)
+        return prev.map(i => i.id === produto.id ? { ...i, quantidade: i.quantidade + (produto.quantidade || 1) } : i)
       }
-      return [...prev, { ...produto, quantidade: 1 }]
+      return [...prev, { ...produto, quantidade: produto.quantidade || 1 }]
     })
   }
 
@@ -20,11 +20,15 @@ export function CartProvider({ children }) {
   }
 
   function total() {
-    return itens.reduce((acc, i) => acc + i.preco * i.quantidade, 0)
+    return itens.reduce((acc, i) => acc + parseFloat(i.preco) * i.quantidade, 0)
+  }
+
+  function limpar() {
+    setItens([])
   }
 
   return (
-    <CartContext.Provider value={{ itens, adicionar, remover, total }}>
+    <CartContext.Provider value={{ itens, adicionar, remover, total, limpar }}>
       {children}
     </CartContext.Provider>
   )

@@ -6,6 +6,8 @@ const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN
 })
 
+const BASE_URL = process.env.FRONTEND_URL || 'https://loja-virtual-three-alpha.vercel.app'
+
 router.post('/criar-preferencia', async (req, res) => {
   const { itens, pagador } = req.body
 
@@ -26,14 +28,14 @@ router.post('/criar-preferencia', async (req, res) => {
           phone: { number: pagador.telefone }
         },
         back_urls: {
-          success: 'http://localhost:5173/pedido-confirmado',
-          failure: 'http://localhost:5173/checkout',
-          pending: 'http://localhost:5173/pedido-confirmado'
-        }
+          success: `${BASE_URL}/pedido-confirmado`,
+          failure: `${BASE_URL}/checkout`,
+          pending: `${BASE_URL}/pedido-confirmado`
+        },
+        auto_return: 'approved'
       }
     })
 
-    console.log('Resultado MP:', JSON.stringify(resultado))
     res.json({ url: resultado.init_point || resultado.sandbox_init_point })
 
   } catch (erro) {

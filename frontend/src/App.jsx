@@ -1,3 +1,5 @@
+
+import PedidoConfirmado from './pages/PedidoConfirmado'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
 import { CartProvider } from './context/CartContext'
@@ -22,6 +24,7 @@ function App() {
               <Route path='/produtos/:id' element={<ProdutoDetalhe />} />
               <Route path='/carrinho' element={<Carrinho />} />
               <Route path='/checkout' element={<Checkout />} />
+              <Route path='/pedido-confirmado' element={<PedidoConfirmado />} />
               <Route path='/admin' element={<Admin />} />
             </Routes>
           </div>
