@@ -11,6 +11,12 @@ const ORDER_BUMP = {
   quantidade: 1
 }
 
+const OPCOES_ENTREGA = [
+  { id: 'motoboy', label: 'Entrega Rápida', descricao: 'Motoboy — Hoje', preco: 15.00, prazo: 'Hoje' },
+  { id: 'retirada', label: 'Retirada no Ponto', descricao: 'Retire você mesmo', preco: 0, prazo: 'Grátis' },
+  { id: 'correios', label: 'Correios PAC', descricao: '5 a 7 dias úteis', preco: 20.00, prazo: '5-7 dias' },
+]
+
 export default function Checkout() {
   const { itens, total } = useCart()
   const [form, setForm] = useState({
@@ -18,6 +24,7 @@ export default function Checkout() {
     cep: '', endereco: '', numero: '', cidade: '', estado: ''
   })
   const [pagamento, setPagamento] = useState('pix')
+  const [entrega, setEntrega] = useState(OPCOES_ENTREGA[0])
   const [enviando, setEnviando] = useState(false)
   const [aceitouBump, setAceitouBump] = useState(false)
 
@@ -26,7 +33,7 @@ export default function Checkout() {
   }
 
   function totalFinal() {
-    return total() + (aceitouBump ? ORDER_BUMP.preco : 0)
+    return total() + entrega.preco + (aceitouBump ? ORDER_BUMP.preco : 0)
   }
 
   async function handleConfirmar() {
@@ -36,7 +43,7 @@ export default function Checkout() {
       await fetch(`${API}/api/pedidos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, pagamento, total: totalFinal(), itens: itensFinal })
+        body: JSON.stringify({ ...form, pagamento, entrega: entrega.id, total: totalFinal(), itens: itensFinal })
       })
 
       const resPagamento = await fetch(`${API}/api/pagamento/criar-preferencia`, {
@@ -63,6 +70,8 @@ export default function Checkout() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
+
+          {/* DADOS PESSOAIS */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
             <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Dados Pessoais</h2>
             <div className="space-y-3">
@@ -75,15 +84,16 @@ export default function Checkout() {
             </div>
           </div>
 
+          {/* ENDEREÇO */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-            <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Endereco de Entrega</h2>
+            <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Endereço de Entrega</h2>
             <div className="space-y-3">
               <input name="cep" placeholder="CEP" onChange={handleChange}
                 className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" />
-              <input name="endereco" placeholder="Endereco" onChange={handleChange}
+              <input name="endereco" placeholder="Endereço" onChange={handleChange}
                 className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" />
               <div className="grid grid-cols-2 gap-3">
-                <input name="numero" placeholder="Numero" onChange={handleChange}
+                <input name="numero" placeholder="Número" onChange={handleChange}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" />
                 <input name="cidade" placeholder="Cidade" onChange={handleChange}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-800 dark:text-white" />
@@ -93,6 +103,36 @@ export default function Checkout() {
             </div>
           </div>
 
+          {/* ENTREGA */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+            <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Entrega</h2>
+            <div className="space-y-3">
+              {OPCOES_ENTREGA.map(op => (
+                <div
+                  key={op.id}
+                  onClick={() => setEntrega(op)}
+                  className={`cursor-pointer rounded-lg border-2 px-4 py-3 flex justify-between items-center transition-all ${
+                    entrega.id === op.id
+                      ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-300 dark:border-gray-600'
+                  }`}
+                >
+                  <div>
+                    <p className="font-bold text-gray-800 dark:text-white">{op.label}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{op.descricao}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-bold ${op.preco === 0 ? 'text-green-600' : 'text-gray-800 dark:text-white'}`}>
+                      {op.preco === 0 ? 'Grátis' : `R$ ${op.preco.toFixed(2)}`}
+                    </p>
+                    <p className="text-xs text-gray-400">{op.prazo}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* PAGAMENTO */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
             <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Pagamento</h2>
             <div className="flex gap-3">
@@ -101,29 +141,26 @@ export default function Checkout() {
                   className={pagamento === op
                     ? 'flex-1 py-2 rounded-lg font-bold border-2 border-blue-600 bg-blue-50 dark:bg-blue-900 text-blue-600'
                     : 'flex-1 py-2 rounded-lg font-bold border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300'}>
-                  {op === 'pix' ? 'Pix' : op === 'cartao' ? 'Cartao' : 'Boleto'}
+                  {op === 'pix' ? 'Pix' : op === 'cartao' ? 'Cartão' : 'Boleto'}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* ORDER BUMP PERSUASIVO */}
+          {/* ORDER BUMP */}
           <div
             onClick={() => setAceitouBump(!aceitouBump)}
             className={`cursor-pointer rounded-xl overflow-hidden shadow-md transition-all duration-300 ${
               aceitouBump ? 'ring-2 ring-green-500' : 'ring-2 ring-yellow-400'
             }`}
           >
-            <div className="bg-gradient-to-r from-orange-500 to-red-500 px-5 py-2 flex items-center gap-2">
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 px-5 py-2">
               <span className="text-white font-bold text-sm tracking-wide">
                 🔥 OFERTA ESPECIAL — SÓ HOJE
               </span>
             </div>
-
             <div className={`p-5 transition-colors duration-300 ${
-              aceitouBump
-                ? 'bg-green-50 dark:bg-green-900/20'
-                : 'bg-yellow-50 dark:bg-yellow-900/10'
+              aceitouBump ? 'bg-green-50 dark:bg-green-900/20' : 'bg-yellow-50 dark:bg-yellow-900/10'
             }`}>
               <div className="flex items-start gap-4">
                 <input
@@ -135,46 +172,34 @@ export default function Checkout() {
                 />
                 <div className="text-4xl flex-shrink-0">🛡️</div>
                 <div className="flex-1">
-                  <p className="font-bold text-gray-800 dark:text-white text-lg leading-tight">
-                    {ORDER_BUMP.nome}
-                  </p>
+                  <p className="font-bold text-gray-800 dark:text-white text-lg">{ORDER_BUMP.nome}</p>
                   <div className="flex items-center gap-1 mt-1">
                     <span className="text-yellow-400 text-sm">⭐⭐⭐⭐⭐</span>
                     <span className="text-gray-500 dark:text-gray-400 text-xs">4.9 · 238 avaliações</span>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
-                    {ORDER_BUMP.descricao}
-                  </p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">{ORDER_BUMP.descricao}</p>
                   <div className="flex items-center gap-3 mt-3">
                     <span className="text-gray-400 line-through text-sm">R$ 59,90</span>
-                    <span className="text-green-600 dark:text-green-400 font-bold text-xl">
-                      R$ {ORDER_BUMP.preco.toFixed(2)}
-                    </span>
-                    <span className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold px-2 py-0.5 rounded-full">
-                      -50%
-                    </span>
+                    <span className="text-green-600 dark:text-green-400 font-bold text-xl">R$ {ORDER_BUMP.preco.toFixed(2)}</span>
+                    <span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full">-50%</span>
                   </div>
-                  <p className="text-green-600 dark:text-green-400 text-xs font-semibold mt-1">
-                    💰 Você economiza R$ 30,00
-                  </p>
+                  <p className="text-green-600 text-xs font-semibold mt-1">💰 Você economiza R$ 30,00</p>
                 </div>
               </div>
-
               {aceitouBump && (
                 <div className="mt-4 bg-green-100 dark:bg-green-800/30 rounded-lg px-4 py-2 text-center">
-                  <span className="text-green-700 dark:text-green-300 font-bold text-sm">
-                    ✅ Adicionado ao seu pedido!
-                  </span>
+                  <span className="text-green-700 dark:text-green-300 font-bold text-sm">✅ Adicionado ao seu pedido!</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
+        {/* RESUMO */}
         <div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow sticky top-6">
             <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Resumo do Pedido</h2>
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-4">
               {itens.map(item => (
                 <div key={item.id} className="flex justify-between text-gray-700 dark:text-gray-300">
                   <span>{item.nome} x{item.quantidade}</span>
@@ -188,9 +213,17 @@ export default function Checkout() {
                 </div>
               )}
             </div>
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 flex justify-between font-bold text-lg">
-              <span className="text-gray-800 dark:text-white">Total</span>
-              <span className="text-blue-600">R$ {totalFinal().toFixed(2)}</span>
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-3 space-y-2">
+              <div className="flex justify-between text-gray-600 dark:text-gray-400 text-sm">
+                <span>Frete ({entrega.label})</span>
+                <span className={entrega.preco === 0 ? 'text-green-600 font-semibold' : ''}>
+                  {entrega.preco === 0 ? 'Grátis' : `R$ ${entrega.preco.toFixed(2)}`}
+                </span>
+              </div>
+              <div className="flex justify-between font-bold text-lg pt-1">
+                <span className="text-gray-800 dark:text-white">Total</span>
+                <span className="text-blue-600">R$ {totalFinal().toFixed(2)}</span>
+              </div>
             </div>
             <button onClick={handleConfirmar} disabled={enviando}
               className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-bold disabled:opacity-50">
