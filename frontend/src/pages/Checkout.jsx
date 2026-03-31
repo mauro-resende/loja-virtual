@@ -107,33 +107,66 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* ORDER BUMP */}
+          {/* ORDER BUMP PERSUASIVO */}
           <div
             onClick={() => setAceitouBump(!aceitouBump)}
-            className={`cursor-pointer border-2 rounded-xl p-5 transition-all ${
-              aceitouBump
-                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                : 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20'
+            className={`cursor-pointer rounded-xl overflow-hidden shadow-md transition-all duration-300 ${
+              aceitouBump ? 'ring-2 ring-green-500' : 'ring-2 ring-yellow-400'
             }`}
           >
-            <div className="flex items-start gap-4">
-              <input
-                type="checkbox"
-                checked={aceitouBump}
-                onChange={() => setAceitouBump(!aceitouBump)}
-                className="mt-1 w-5 h-5 accent-green-500"
-                onClick={e => e.stopPropagation()}
-              />
-              <div>
-                <p className="text-xs font-bold uppercase text-yellow-600 dark:text-yellow-400 mb-1">
-                  Oferta especial — adicione ao seu pedido agora
-                </p>
-                <p className="font-bold text-gray-800 dark:text-white text-lg">{ORDER_BUMP.nome}</p>
-                <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">{ORDER_BUMP.descricao}</p>
-                <p className="mt-2 text-green-600 dark:text-green-400 font-bold text-lg">
-                  + R$ {ORDER_BUMP.preco.toFixed(2)}
-                </p>
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 px-5 py-2 flex items-center gap-2">
+              <span className="text-white font-bold text-sm tracking-wide">
+                🔥 OFERTA ESPECIAL — SÓ HOJE
+              </span>
+            </div>
+
+            <div className={`p-5 transition-colors duration-300 ${
+              aceitouBump
+                ? 'bg-green-50 dark:bg-green-900/20'
+                : 'bg-yellow-50 dark:bg-yellow-900/10'
+            }`}>
+              <div className="flex items-start gap-4">
+                <input
+                  type="checkbox"
+                  checked={aceitouBump}
+                  onChange={() => setAceitouBump(!aceitouBump)}
+                  className="mt-1 w-5 h-5 accent-green-500 flex-shrink-0"
+                  onClick={e => e.stopPropagation()}
+                />
+                <div className="text-4xl flex-shrink-0">🛡️</div>
+                <div className="flex-1">
+                  <p className="font-bold text-gray-800 dark:text-white text-lg leading-tight">
+                    {ORDER_BUMP.nome}
+                  </p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-yellow-400 text-sm">⭐⭐⭐⭐⭐</span>
+                    <span className="text-gray-500 dark:text-gray-400 text-xs">4.9 · 238 avaliações</span>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
+                    {ORDER_BUMP.descricao}
+                  </p>
+                  <div className="flex items-center gap-3 mt-3">
+                    <span className="text-gray-400 line-through text-sm">R$ 59,90</span>
+                    <span className="text-green-600 dark:text-green-400 font-bold text-xl">
+                      R$ {ORDER_BUMP.preco.toFixed(2)}
+                    </span>
+                    <span className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                      -50%
+                    </span>
+                  </div>
+                  <p className="text-green-600 dark:text-green-400 text-xs font-semibold mt-1">
+                    💰 Você economiza R$ 30,00
+                  </p>
+                </div>
               </div>
+
+              {aceitouBump && (
+                <div className="mt-4 bg-green-100 dark:bg-green-800/30 rounded-lg px-4 py-2 text-center">
+                  <span className="text-green-700 dark:text-green-300 font-bold text-sm">
+                    ✅ Adicionado ao seu pedido!
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
