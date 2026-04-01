@@ -24,12 +24,24 @@ const OPCOES_ENTREGA = [
   { id: 'correios', label: 'Correios PAC',       descricao: '5 a 7 dias úteis', preco: 20.00, prazo: '5-7 dias'},
 ]
 
+const CAMPOS_OBRIGATORIOS = {
+  nome: 'Nome completo',
+  email: 'E-mail',
+  telefone: 'Telefone',
+  cep: 'CEP',
+  endereco: 'Endereço',
+  numero: 'Número',
+  cidade: 'Cidade',
+  estado: 'Estado',
+}
+
 export default function Checkout() {
   const { itens, total } = useCart()
   const [form, setForm] = useState({
     nome: '', email: '', telefone: '',
     cep: '', endereco: '', numero: '', cidade: '', estado: ''
   })
+  const [erros, setErros] = useState({})
   const [pagamento, setPagamento]     = useState('pix')
   const [entrega, setEntrega]         = useState(OPCOES_ENTREGA[0])
   const [enviando, setEnviando]       = useState(false)
@@ -40,6 +52,18 @@ export default function Checkout() {
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
+    setErros({ ...erros, [e.target.name]: '' })
+  }
+
+  function validar() {
+    const novosErros = {}
+    Object.keys(CAMPOS_OBRIGATORIOS).forEach(campo => {
+      if (!form[campo].trim()) {
+        novosErros[campo] = `${CAMPOS_OBRIGATORIOS[campo]} é obrigatório`
+      }
+    })
+    setErros(novosErros)
+    return Object.keys(novosErros).length === 0
   }
 
   function aplicarCupom() {
@@ -69,6 +93,11 @@ export default function Checkout() {
   }
 
   async function handleConfirmar() {
+    if (!validar()) {
+      alert('Preencha todos os campos obrigatórios.')
+      return
+    }
+
     setEnviando(true)
     const itensFinal = aceitouBump ? [...itens, ORDER_BUMP] : itens
     try {
@@ -92,13 +121,28 @@ export default function Checkout() {
       })
 
       const dados = await resPagamento.json()
-      window.location.href = dados.url
+
+      const url = dados.url || dados.init_point || dados.sandbox_init_point
+      if (url) {
+        window.location.href = url
+      } else {
+        console.error('URL inválida:', dados)
+        alert('Erro ao redirecionar para pagamento. Tente novamente.')
+      }
 
     } catch (erro) {
+      console.error(erro)
       alert('Erro ao realizar pedido. Tente novamente.')
     }
     setEnviando(false)
   }
+
+  const inputClass = (campo) =>
+    `w-full border rounded-lg px-4 py-2.5 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+      erros[campo]
+        ? 'border-red-500 dark:border-red-500'
+        : 'border-gray-300 dark:border-gray-600'
+    }`
 
   return (
     <div className="max-w-5xl mx-auto py-12 px-6">
@@ -114,13 +158,22 @@ export default function Checkout() {
               1. Dados Pessoais
             </h2>
             <div className="space-y-3">
-              <input name="nome" placeholder="Nome completo" onChange={handleChange}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <div>
+                <input name="nome" placeholder="Nome completo *" onChange={handleChange}
+                  className={inputClass('nome')} />
+                {erros.nome && <p className="text-red-500 text-xs mt-1">{erros.nome}</p>}
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                <input name="email" placeholder="E-mail" onChange={handleChange}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input name="telefone" placeholder="Telefone" onChange={handleChange}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <div>
+                  <input name="email" placeholder="E-mail *" onChange={handleChange}
+                    className={inputClass('email')} />
+                  {erros.email && <p className="text-red-500 text-xs mt-1">{erros.email}</p>}
+                </div>
+                <div>
+                  <input name="telefone" placeholder="Telefone *" onChange={handleChange}
+                    className={inputClass('telefone')} />
+                  {erros.telefone && <p className="text-red-500 text-xs mt-1">{erros.telefone}</p>}
+                </div>
               </div>
             </div>
           </div>
@@ -130,18 +183,33 @@ export default function Checkout() {
               2. Endereço de Entrega
             </h2>
             <div className="space-y-3">
-              <input name="cep" placeholder="CEP" onChange={handleChange}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input name="endereco" placeholder="Endereço" onChange={handleChange}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <div className="grid grid-cols-3 gap-3">
-                <input name="numero" placeholder="Número" onChange={handleChange}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input name="cidade" placeholder="Cidade" onChange={handleChange}
-                  className="col-span-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <div>
+                <input name="cep" placeholder="CEP *" onChange={handleChange}
+                  className={inputClass('cep')} />
+                {erros.cep && <p className="text-red-500 text-xs mt-1">{erros.cep}</p>}
               </div>
-              <input name="estado" placeholder="Estado" onChange={handleChange}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <div>
+                <input name="endereco" placeholder="Endereço *" onChange={handleChange}
+                  className={inputClass('endereco')} />
+                {erros.endereco && <p className="text-red-500 text-xs mt-1">{erros.endereco}</p>}
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <input name="numero" placeholder="Número *" onChange={handleChange}
+                    className={inputClass('numero')} />
+                  {erros.numero && <p className="text-red-500 text-xs mt-1">{erros.numero}</p>}
+                </div>
+                <div className="col-span-2">
+                  <input name="cidade" placeholder="Cidade *" onChange={handleChange}
+                    className={inputClass('cidade')} />
+                  {erros.cidade && <p className="text-red-500 text-xs mt-1">{erros.cidade}</p>}
+                </div>
+              </div>
+              <div>
+                <input name="estado" placeholder="Estado *" onChange={handleChange}
+                  className={inputClass('estado')} />
+                {erros.estado && <p className="text-red-500 text-xs mt-1">{erros.estado}</p>}
+              </div>
             </div>
           </div>
 
@@ -234,13 +302,11 @@ export default function Checkout() {
               {!cupomAplicado ? (
                 <div>
                   <div className="flex gap-2">
-                    <input
-                      value={cupomInput}
+                    <input value={cupomInput}
                       onChange={e => { setCupomInput(e.target.value); setCupomErro('') }}
                       onKeyDown={e => e.key === 'Enter' && aplicarCupom()}
                       placeholder="Cupom de desconto"
-                      className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                      className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     <button onClick={aplicarCupom}
                       className="px-4 py-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 rounded-lg text-sm font-bold hover:opacity-90 transition">
                       Aplicar
@@ -254,9 +320,7 @@ export default function Checkout() {
                     <p className="text-sm font-bold text-green-700 dark:text-green-400">🏷️ {cupomAplicado.codigo}</p>
                     <p className="text-xs text-green-600">{cupomAplicado.label} aplicado!</p>
                   </div>
-                  <button onClick={removerCupom} className="text-red-400 hover:text-red-600 text-xs font-bold">
-                    Remover
-                  </button>
+                  <button onClick={removerCupom} className="text-red-400 hover:text-red-600 text-xs font-bold">Remover</button>
                 </div>
               )}
             </div>
@@ -289,8 +353,7 @@ export default function Checkout() {
             <div onClick={() => setAceitouBump(!aceitouBump)}
               className={`cursor-pointer rounded-xl overflow-hidden transition-all duration-300 ${
                 aceitouBump ? 'ring-2 ring-green-500' : 'ring-2 ring-yellow-400'
-              }`}
-            >
+              }`}>
               <div className="bg-gradient-to-r from-orange-500 to-red-500 px-4 py-1.5">
                 <span className="text-white font-bold text-xs tracking-wide">🔥 OFERTA ESPECIAL — SÓ HOJE</span>
               </div>
