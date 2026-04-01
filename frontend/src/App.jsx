@@ -9,6 +9,9 @@ import ProdutoDetalhe from './pages/ProdutoDetalhe'
 import Carrinho from './pages/Carrinho'
 import Checkout from './pages/Checkout'
 import Admin from './pages/Admin'
+import Sobre from './pages/Sobre'
+import FAQ from './pages/FAQ'
+import Politica from './pages/Politica'
 
 const WHATSAPP = '5527999454882'
 
@@ -43,6 +46,9 @@ function App() {
               <Route path='/checkout' element={<Checkout />} />
               <Route path='/pedido-confirmado' element={<PedidoConfirmado />} />
               <Route path='/admin' element={<Admin />} />
+              <Route path='/sobre' element={<Sobre />} />
+              <Route path='/faq' element={<FAQ />} />
+              <Route path='/politica' element={<Politica />} />
             </Routes>
             <BotaoWhatsApp />
           </div>
