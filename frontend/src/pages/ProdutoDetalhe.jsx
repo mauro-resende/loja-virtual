@@ -7,15 +7,14 @@ const API = 'https://loja-virtual-production-6241.up.railway.app';
 // ── MÍDIA DO PRODUTO ─────────────────────────────────────────
 // Substitua pelas imagens e vídeo reais do seu produto
 const MIDIA_PRODUTO = [
-  { tipo: 'imagem', src: 'https://via.placeholder.com/600x600?text=Foto+1' },
-  { tipo: 'imagem', src: 'https://via.placeholder.com/600x600?text=Foto+2' },
-  { tipo: 'imagem', src: 'https://via.placeholder.com/600x600?text=Foto+3' },
-  {
-    tipo: 'video',
-    src: 'https://www.youtube.com/embed/SEU_VIDEO_ID',   // ← cole o ID do YouTube
-    thumb: 'https://via.placeholder.com/100x100?text=▶',
-  },
+  { tipo: 'imagem', src: 'https://i.ibb.co/3mzYrRTy/Chapa-1.png' },
+  { tipo: 'imagem', src: 'https://i.ibb.co/HTg8sPHq/Chapa-2.png' },
+  { tipo: 'imagem', src: 'https://i.ibb.co/0R48PBKg/Chapa-3.jpg' },
+  { tipo: 'imagem', src: 'https://i.ibb.co/HLcx0ygQ/Chapa-4.jpg' },
+  { tipo: 'imagem', src: 'https://i.ibb.co/x83Mdz58/Chapa-5.png' },
+  // vídeo entra aqui depois
 ];
+
 
 export default function ProdutoDetalhe() {
   const { id } = useParams();
