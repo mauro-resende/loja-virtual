@@ -12,6 +12,7 @@ import Admin from './pages/Admin'
 import Sobre from './pages/Sobre'
 import FAQ from './pages/FAQ'
 import Politica from './pages/Politica'
+import { Link } from 'react-router-dom'
 
 const WHATSAPP = '5527999454882'
 
@@ -31,25 +32,87 @@ function BotaoWhatsApp() {
   )
 }
 
+function Footer() {
+  return (
+    <footer className="bg-gray-900 text-gray-400 mt-20">
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10">
+
+          {/* Marca */}
+          <div>
+            <h2 className="text-white text-xl font-bold mb-3">SupriMais</h2>
+            <p className="text-sm leading-relaxed">
+              Produtos essenciais com entrega rápida em Serra - ES. Compra segura e atendimento real.
+            </p>
+            <a
+              href={`https://wa.me/${WHATSAPP}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-block mt-4 text-green-400 hover:text-green-300 text-sm font-semibold"
+            >
+              💬 (27) 99945-4882
+            </a>
+          </div>
+
+          {/* Links */}
+          <div>
+            <h3 className="text-white font-semibold mb-3">Links úteis</h3>
+            <ul className="space-y-2 text-sm">
+              <li><Link to="/" className="hover:text-white transition-colors">Início</Link></li>
+              <li><Link to="/produtos" className="hover:text-white transition-colors">Produtos</Link></li>
+              <li><Link to="/sobre" className="hover:text-white transition-colors">Sobre nós</Link></li>
+              <li><Link to="/faq" className="hover:text-white transition-colors">Perguntas Frequentes</Link></li>
+              <li><Link to="/politica" className="hover:text-white transition-colors">Política de Troca</Link></li>
+            </ul>
+          </div>
+
+          {/* Pagamentos */}
+          <div>
+            <h3 className="text-white font-semibold mb-3">Pagamento seguro</h3>
+            <div className="flex flex-wrap gap-2 mb-4">
+              <span className="bg-gray-800 text-xs px-2 py-1 rounded font-bold text-blue-400">VISA</span>
+              <span className="bg-gray-800 text-xs px-2 py-1 rounded font-bold text-red-400">Master</span>
+              <span className="bg-gray-800 text-xs px-2 py-1 rounded font-bold text-yellow-400">ELO</span>
+              <span className="bg-gray-800 text-xs px-2 py-1 rounded font-bold text-green-400">PIX</span>
+              <span className="bg-gray-800 text-xs px-2 py-1 rounded font-bold text-gray-300">Boleto</span>
+            </div>
+            <p className="text-xs">🔒 Ambiente 100% seguro via Mercado Pago</p>
+            <p className="text-xs mt-1">↩️ Troca em até 7 dias</p>
+            <p className="text-xs mt-1">🚀 Entrega no mesmo dia</p>
+          </div>
+
+        </div>
+
+        <div className="border-t border-gray-800 mt-10 pt-6 text-center text-xs text-gray-600">
+          © {new Date().getFullYear()} SupriMais — Todos os direitos reservados. Serra - ES
+        </div>
+      </div>
+    </footer>
+  )
+}
+
 function App() {
   return (
     <ThemeProvider>
       <CartProvider>
         <BrowserRouter>
-          <div className='min-h-screen bg-white dark:bg-gray-900'>
+          <div className='min-h-screen bg-white dark:bg-gray-900 flex flex-col'>
             <Navbar />
-            <Routes>
-              <Route path='/' element={<Home />} />
-              <Route path='/produtos' element={<Produtos />} />
-              <Route path='/produtos/:id' element={<ProdutoDetalhe />} />
-              <Route path='/carrinho' element={<Carrinho />} />
-              <Route path='/checkout' element={<Checkout />} />
-              <Route path='/pedido-confirmado' element={<PedidoConfirmado />} />
-              <Route path='/admin' element={<Admin />} />
-              <Route path='/sobre' element={<Sobre />} />
-              <Route path='/faq' element={<FAQ />} />
-              <Route path='/politica' element={<Politica />} />
-            </Routes>
+            <main className='flex-1'>
+              <Routes>
+                <Route path='/' element={<Home />} />
+                <Route path='/produtos' element={<Produtos />} />
+                <Route path='/produtos/:id' element={<ProdutoDetalhe />} />
+                <Route path='/carrinho' element={<Carrinho />} />
+                <Route path='/checkout' element={<Checkout />} />
+                <Route path='/pedido-confirmado' element={<PedidoConfirmado />} />
+                <Route path='/admin' element={<Admin />} />
+                <Route path='/sobre' element={<Sobre />} />
+                <Route path='/faq' element={<FAQ />} />
+                <Route path='/politica' element={<Politica />} />
+              </Routes>
+            </main>
+            <Footer />
             <BotaoWhatsApp />
           </div>
         </BrowserRouter>
