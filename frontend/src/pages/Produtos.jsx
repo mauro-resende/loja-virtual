@@ -47,11 +47,15 @@ export default function Produtos() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {produtos.map(p => (
-          <div key={p.id} onClick={() => navigate(`/produtos/${p.id}`)}
-            className="cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
-
+          <div
+            key={p.id}
+            onClick={() => navigate(`/produtos/${p.id}`)}
+            className="cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
+          >
             <div className="relative bg-gray-100 dark:bg-gray-700 aspect-square overflow-hidden">
-              <img src={p.imagem} alt={p.nome}
+              <img
+                src={p.imagem}
+                alt={p.nome}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 onError={e => {
                   e.target.onerror = null
@@ -75,21 +79,23 @@ export default function Produtos() {
               </div>
               <p className="text-xs text-green-600 font-semibold mb-4">🚀 Entrega rápida disponível</p>
 
-              <button onClick={e => handleAdicionar(e, p)}
+              <button
+                onClick={e => handleAdicionar(e, p)}
                 className={`w-full py-2.5 rounded-lg font-bold text-white transition-all mt-auto ${
                   adicionado === p.id ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-700'
-                }`}>
+                }`}
+              >
                 {adicionado === p.id ? '✓ Adicionado!' : 'Adicionar ao Carrinho'}
               </button>
 
               <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                <p className="text-xs text-gray-400 text-center mb-2">Pagamento seguro via</p>
+                <p className="text-xs text-gray-400 text-center mb-2">🔒 Pagamento 100% seguro</p>
                 <div className="flex items-center justify-center gap-2 flex-wrap">
-                  <span className="text-xs font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">VISA</span>
-                  <span className="text-xs font-bold bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 px-2 py-1 rounded">Master</span>
-                  <span className="text-xs font-bold bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-300 px-2 py-1 rounded">ELO</span>
-                  <span className="text-xs font-bold bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded">PIX</span>
-                  <span className="text-xs font-bold bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">Boleto</span>
+                  <span className="text-xs font-bold border border-gray-200 dark:border-gray-600 px-2 py-1 rounded text-blue-700 dark:text-blue-300">VISA</span>
+                  <span className="text-xs font-bold border border-gray-200 dark:border-gray-600 px-2 py-1 rounded text-red-600 dark:text-red-300">Master</span>
+                  <span className="text-xs font-bold border border-gray-200 dark:border-gray-600 px-2 py-1 rounded text-yellow-600 dark:text-yellow-300">ELO</span>
+                  <span className="text-xs font-bold border border-gray-200 dark:border-gray-600 px-2 py-1 rounded text-teal-600 dark:text-teal-300">PIX</span>
+                  <span className="text-xs font-bold border border-gray-200 dark:border-gray-600 px-2 py-1 rounded text-gray-600 dark:text-gray-300">Boleto</span>
                 </div>
               </div>
             </div>
