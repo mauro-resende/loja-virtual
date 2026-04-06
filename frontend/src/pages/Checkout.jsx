@@ -12,16 +12,16 @@ const CUPONS = {
 
 const ORDER_BUMP = {
   id: 'bump-1',
-  nome: 'Kit Proteção Premium',
-  descricao: 'Capa protetora + película de vidro temperado.',
-  preco: 29.90,
+  nome: 'Cabo de Rede 5 metros CAT6',
+  descricao: 'Internet mais rápida e estável. Plug and play, funciona em qualquer roteador.',
+  preco: 19.90,
   quantidade: 1
 }
 
 const OPCOES_ENTREGA = [
-  { id: 'motoboy',  label: 'Entrega Rápida',    descricao: 'Motoboy — Hoje',    preco: 15.00, prazo: 'Hoje'    },
-  { id: 'retirada', label: 'Retirada no Ponto', descricao: 'Retire você mesmo', preco: 0,     prazo: 'Grátis' },
-  { id: 'correios', label: 'Correios PAC',       descricao: '5 a 7 dias úteis', preco: 20.00, prazo: '5-7 dias'},
+  { id: 'motoboy',  label: 'Entrega Rápida',    descricao: 'Motoboy — Hoje',    preco: 8.00,  prazo: 'Hoje'    },
+  { id: 'retirada', label: 'Retirada no Ponto', descricao: 'Retire você mesmo', preco: 0,     prazo: 'Grátis'  },
+  { id: 'correios', label: 'Correios PAC',       descricao: '5 a 7 dias úteis', preco: 15.00, prazo: '5-7 dias' },
 ]
 
 const CAMPOS_OBRIGATORIOS = {
@@ -42,17 +42,41 @@ export default function Checkout() {
     cep: '', endereco: '', numero: '', cidade: '', estado: ''
   })
   const [erros, setErros] = useState({})
-  const [pagamento, setPagamento]     = useState('pix')
-  const [entrega, setEntrega]         = useState(OPCOES_ENTREGA[0])
-  const [enviando, setEnviando]       = useState(false)
-  const [aceitouBump, setAceitouBump] = useState(false)
-  const [cupomInput, setCupomInput]   = useState('')
+  const [pagamento, setPagamento]         = useState('pix')
+  const [entrega, setEntrega]             = useState(OPCOES_ENTREGA[0])
+  const [enviando, setEnviando]           = useState(false)
+  const [aceitouBump, setAceitouBump]     = useState(false)
+  const [cupomInput, setCupomInput]       = useState('')
   const [cupomAplicado, setCupomAplicado] = useState(null)
-  const [cupomErro, setCupomErro]     = useState('')
+  const [cupomErro, setCupomErro]         = useState('')
+  const [buscandoCep, setBuscandoCep]     = useState(false)
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
     setErros({ ...erros, [e.target.name]: '' })
+  }
+
+  async function handleCep(e) {
+    const cep = e.target.value.replace(/\D/g, '')
+    setForm(f => ({ ...f, cep: e.target.value }))
+    setErros(err => ({ ...err, cep: '' }))
+
+    if (cep.length === 8) {
+      setBuscandoCep(true)
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
+        const data = await res.json()
+        if (!data.erro) {
+          setForm(f => ({
+            ...f,
+            endereco: data.logradouro || '',
+            cidade: data.localidade || '',
+            estado: data.uf || '',
+          }))
+        }
+      } catch {}
+      setBuscandoCep(false)
+    }
   }
 
   function validar() {
@@ -97,7 +121,6 @@ export default function Checkout() {
       alert('Preencha todos os campos obrigatórios.')
       return
     }
-
     setEnviando(true)
     const itensFinal = aceitouBump ? [...itens, ORDER_BUMP] : itens
     try {
@@ -121,15 +144,12 @@ export default function Checkout() {
       })
 
       const dados = await resPagamento.json()
-
       const url = dados.url || dados.init_point || dados.sandbox_init_point
       if (url) {
         window.location.href = url
       } else {
-        console.error('URL inválida:', dados)
         alert('Erro ao redirecionar para pagamento. Tente novamente.')
       }
-
     } catch (erro) {
       console.error(erro)
       alert('Erro ao realizar pedido. Tente novamente.')
@@ -139,10 +159,130 @@ export default function Checkout() {
 
   const inputClass = (campo) =>
     `w-full border rounded-lg px-4 py-2.5 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-      erros[campo]
-        ? 'border-red-500 dark:border-red-500'
-        : 'border-gray-300 dark:border-gray-600'
+      erros[campo] ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
     }`
+
+  const Resumo = () => (
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow space-y-5">
+      <h2 className="text-base font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+        Resumo do Pedido
+      </h2>
+
+      <div className="space-y-3">
+        {itens.map(item => (
+          <div key={item.id} className="flex justify-between items-center">
+            <div>
+              <p className="text-sm font-semibold text-gray-800 dark:text-white">{item.nome}</p>
+              <p className="text-xs text-gray-400">Qtd: {item.quantidade}</p>
+            </div>
+            <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+              R$ {(parseFloat(item.preco) * item.quantidade).toFixed(2)}
+            </span>
+          </div>
+        ))}
+        {aceitouBump && (
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm font-semibold text-green-600">{ORDER_BUMP.nome}</p>
+              <p className="text-xs text-gray-400">Oferta especial</p>
+            </div>
+            <span className="text-sm font-bold text-green-600">R$ {ORDER_BUMP.preco.toFixed(2)}</span>
+          </div>
+        )}
+      </div>
+
+      {/* CUPOM */}
+      <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
+        {!cupomAplicado ? (
+          <div>
+            <div className="flex gap-2">
+              <input value={cupomInput}
+                onChange={e => { setCupomInput(e.target.value); setCupomErro('') }}
+                onKeyDown={e => e.key === 'Enter' && aplicarCupom()}
+                placeholder="Cupom de desconto"
+                className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <button onClick={aplicarCupom}
+                className="px-4 py-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 rounded-lg text-sm font-bold hover:opacity-90">
+                Aplicar
+              </button>
+            </div>
+            {cupomErro && <p className="text-red-500 text-xs mt-1">{cupomErro}</p>}
+          </div>
+        ) : (
+          <div className="flex justify-between items-center bg-green-50 dark:bg-green-900/20 border border-green-300 rounded-lg px-3 py-2">
+            <div>
+              <p className="text-sm font-bold text-green-700 dark:text-green-400">🏷️ {cupomAplicado.codigo}</p>
+              <p className="text-xs text-green-600">{cupomAplicado.label} aplicado!</p>
+            </div>
+            <button onClick={removerCupom} className="text-red-400 hover:text-red-600 text-xs font-bold">Remover</button>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+          <span>Subtotal</span>
+          <span>R$ {total().toFixed(2)}</span>
+        </div>
+        {cupomAplicado && (
+          <div className="flex justify-between text-sm text-green-600 font-semibold">
+            <span>Desconto ({cupomAplicado.label})</span>
+            <span>- R$ {valorDesconto().toFixed(2)}</span>
+          </div>
+        )}
+        <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+          <span>Frete ({entrega.label})</span>
+          <span className={entrega.preco === 0 ? 'text-green-600 font-semibold' : ''}>
+            {entrega.preco === 0 ? 'Grátis' : `R$ ${entrega.preco.toFixed(2)}`}
+          </span>
+        </div>
+      </div>
+
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4 flex justify-between items-center">
+        <span className="font-bold text-lg text-gray-800 dark:text-white">Total</span>
+        <span className="font-bold text-2xl text-blue-600">R$ {totalFinal().toFixed(2)}</span>
+      </div>
+
+      {/* Order Bump */}
+      <div onClick={() => setAceitouBump(!aceitouBump)}
+        className={`cursor-pointer rounded-xl overflow-hidden transition-all duration-300 ${
+          aceitouBump ? 'ring-2 ring-green-500' : 'ring-2 ring-yellow-400'
+        }`}>
+        <div className="bg-gradient-to-r from-orange-500 to-red-500 px-4 py-1.5">
+          <span className="text-white font-bold text-xs tracking-wide">🔥 OFERTA ESPECIAL — SÓ HOJE</span>
+        </div>
+        <div className={`p-4 ${aceitouBump ? 'bg-green-50 dark:bg-green-900/20' : 'bg-yellow-50 dark:bg-yellow-900/10'}`}>
+          <div className="flex items-start gap-3">
+            <input type="checkbox" checked={aceitouBump}
+              onChange={() => setAceitouBump(!aceitouBump)}
+              className="mt-1 w-4 h-4 accent-green-500 flex-shrink-0"
+              onClick={e => e.stopPropagation()} />
+            <div>
+              <p className="font-bold text-gray-800 dark:text-white text-sm">{ORDER_BUMP.nome}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{ORDER_BUMP.descricao}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-gray-400 line-through text-xs">R$ 39,90</span>
+                <span className="text-green-600 font-bold">R$ {ORDER_BUMP.preco.toFixed(2)}</span>
+                <span className="bg-red-100 text-red-600 text-xs font-bold px-1.5 py-0.5 rounded-full">-50%</span>
+              </div>
+            </div>
+          </div>
+          {aceitouBump && (
+            <p className="text-center text-green-700 font-bold text-xs mt-3">✅ Adicionado ao pedido!</p>
+          )}
+        </div>
+      </div>
+
+      <button onClick={handleConfirmar} disabled={enviando}
+        className="w-full bg-blue-600 text-white py-3.5 rounded-lg hover:bg-blue-700 transition font-bold text-lg disabled:opacity-50 shadow-lg">
+        {enviando ? 'Processando...' : '🔒 Confirmar Pedido'}
+      </button>
+
+      <p className="text-center text-xs text-gray-400">
+        🔒 Pagamento 100% seguro via Mercado Pago
+      </p>
+    </div>
+  )
 
   return (
     <div className="max-w-5xl mx-auto py-12 px-6">
@@ -152,6 +292,11 @@ export default function Checkout() {
 
         {/* COLUNA ESQUERDA */}
         <div className="lg:col-span-3 space-y-5">
+
+          {/* Resumo no topo em mobile */}
+          <div className="lg:hidden">
+            <Resumo />
+          </div>
 
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
             <h2 className="text-base font-bold mb-4 text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -183,13 +328,19 @@ export default function Checkout() {
               2. Endereço de Entrega
             </h2>
             <div className="space-y-3">
-              <div>
-                <input name="cep" placeholder="CEP *" onChange={handleChange}
+              <div className="relative">
+                <input name="cep" placeholder="CEP * (preenchimento automático)"
+                  onChange={handleCep} value={form.cep}
+                  maxLength={9}
                   className={inputClass('cep')} />
+                {buscandoCep && (
+                  <span className="absolute right-3 top-3 text-xs text-blue-500">Buscando...</span>
+                )}
                 {erros.cep && <p className="text-red-500 text-xs mt-1">{erros.cep}</p>}
               </div>
               <div>
                 <input name="endereco" placeholder="Endereço *" onChange={handleChange}
+                  value={form.endereco}
                   className={inputClass('endereco')} />
                 {erros.endereco && <p className="text-red-500 text-xs mt-1">{erros.endereco}</p>}
               </div>
@@ -201,12 +352,14 @@ export default function Checkout() {
                 </div>
                 <div className="col-span-2">
                   <input name="cidade" placeholder="Cidade *" onChange={handleChange}
+                    value={form.cidade}
                     className={inputClass('cidade')} />
                   {erros.cidade && <p className="text-red-500 text-xs mt-1">{erros.cidade}</p>}
                 </div>
               </div>
               <div>
                 <input name="estado" placeholder="Estado *" onChange={handleChange}
+                  value={form.estado}
                   className={inputClass('estado')} />
                 {erros.estado && <p className="text-red-500 text-xs mt-1">{erros.estado}</p>}
               </div>
@@ -224,8 +377,7 @@ export default function Checkout() {
                     entrega.id === op.id
                       ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
                       : 'border-gray-200 dark:border-gray-600 hover:border-gray-400'
-                  }`}
-                >
+                  }`}>
                   <div className="flex items-center gap-3">
                     <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                       entrega.id === op.id ? 'border-blue-600' : 'border-gray-400'
@@ -255,7 +407,7 @@ export default function Checkout() {
                   className={`flex-1 py-2.5 rounded-lg font-bold border-2 transition-all ${
                     pagamento === op
                       ? 'border-blue-600 bg-blue-50 dark:bg-blue-900 text-blue-600'
-                      : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-gray-400'
+                      : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'
                   }`}>
                   {op === 'pix' ? '⚡ Pix' : op === 'cartao' ? '💳 Cartão' : '🧾 Boleto'}
                 </button>
@@ -267,130 +419,13 @@ export default function Checkout() {
           </div>
         </div>
 
-        {/* COLUNA DIREITA */}
-        <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow sticky top-6 space-y-5">
-            <h2 className="text-base font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Resumo do Pedido
-            </h2>
-
-            <div className="space-y-3">
-              {itens.map(item => (
-                <div key={item.id} className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800 dark:text-white">{item.nome}</p>
-                    <p className="text-xs text-gray-400">Qtd: {item.quantidade}</p>
-                  </div>
-                  <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                    R$ {(parseFloat(item.preco) * item.quantidade).toFixed(2)}
-                  </span>
-                </div>
-              ))}
-              {aceitouBump && (
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm font-semibold text-green-600">{ORDER_BUMP.nome}</p>
-                    <p className="text-xs text-gray-400">Oferta especial</p>
-                  </div>
-                  <span className="text-sm font-bold text-green-600">R$ {ORDER_BUMP.preco.toFixed(2)}</span>
-                </div>
-              )}
-            </div>
-
-            {/* CUPOM */}
-            <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
-              {!cupomAplicado ? (
-                <div>
-                  <div className="flex gap-2">
-                    <input value={cupomInput}
-                      onChange={e => { setCupomInput(e.target.value); setCupomErro('') }}
-                      onKeyDown={e => e.key === 'Enter' && aplicarCupom()}
-                      placeholder="Cupom de desconto"
-                      className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    <button onClick={aplicarCupom}
-                      className="px-4 py-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 rounded-lg text-sm font-bold hover:opacity-90 transition">
-                      Aplicar
-                    </button>
-                  </div>
-                  {cupomErro && <p className="text-red-500 text-xs mt-1">{cupomErro}</p>}
-                </div>
-              ) : (
-                <div className="flex justify-between items-center bg-green-50 dark:bg-green-900/20 border border-green-300 rounded-lg px-3 py-2">
-                  <div>
-                    <p className="text-sm font-bold text-green-700 dark:text-green-400">🏷️ {cupomAplicado.codigo}</p>
-                    <p className="text-xs text-green-600">{cupomAplicado.label} aplicado!</p>
-                  </div>
-                  <button onClick={removerCupom} className="text-red-400 hover:text-red-600 text-xs font-bold">Remover</button>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>Subtotal</span>
-                <span>R$ {total().toFixed(2)}</span>
-              </div>
-              {cupomAplicado && (
-                <div className="flex justify-between text-sm text-green-600 font-semibold">
-                  <span>Desconto ({cupomAplicado.label})</span>
-                  <span>- R$ {valorDesconto().toFixed(2)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>Frete ({entrega.label})</span>
-                <span className={entrega.preco === 0 ? 'text-green-600 font-semibold' : ''}>
-                  {entrega.preco === 0 ? 'Grátis' : `R$ ${entrega.preco.toFixed(2)}`}
-                </span>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 flex justify-between items-center">
-              <span className="font-bold text-lg text-gray-800 dark:text-white">Total</span>
-              <span className="font-bold text-2xl text-blue-600">R$ {totalFinal().toFixed(2)}</span>
-            </div>
-
-            {/* Order Bump */}
-            <div onClick={() => setAceitouBump(!aceitouBump)}
-              className={`cursor-pointer rounded-xl overflow-hidden transition-all duration-300 ${
-                aceitouBump ? 'ring-2 ring-green-500' : 'ring-2 ring-yellow-400'
-              }`}>
-              <div className="bg-gradient-to-r from-orange-500 to-red-500 px-4 py-1.5">
-                <span className="text-white font-bold text-xs tracking-wide">🔥 OFERTA ESPECIAL — SÓ HOJE</span>
-              </div>
-              <div className={`p-4 transition-colors duration-300 ${
-                aceitouBump ? 'bg-green-50 dark:bg-green-900/20' : 'bg-yellow-50 dark:bg-yellow-900/10'
-              }`}>
-                <div className="flex items-start gap-3">
-                  <input type="checkbox" checked={aceitouBump}
-                    onChange={() => setAceitouBump(!aceitouBump)}
-                    className="mt-1 w-4 h-4 accent-green-500 flex-shrink-0"
-                    onClick={e => e.stopPropagation()} />
-                  <div>
-                    <p className="font-bold text-gray-800 dark:text-white text-sm">{ORDER_BUMP.nome}</p>
-                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{ORDER_BUMP.descricao}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-gray-400 line-through text-xs">R$ 59,90</span>
-                      <span className="text-green-600 font-bold">R$ {ORDER_BUMP.preco.toFixed(2)}</span>
-                      <span className="bg-red-100 text-red-600 text-xs font-bold px-1.5 py-0.5 rounded-full">-50%</span>
-                    </div>
-                  </div>
-                </div>
-                {aceitouBump && (
-                  <p className="text-center text-green-700 font-bold text-xs mt-3">✅ Adicionado ao pedido!</p>
-                )}
-              </div>
-            </div>
-
-            <button onClick={handleConfirmar} disabled={enviando}
-              className="w-full bg-blue-600 text-white py-3.5 rounded-lg hover:bg-blue-700 transition font-bold text-lg disabled:opacity-50 shadow-lg">
-              {enviando ? 'Processando...' : '🔒 Confirmar Pedido'}
-            </button>
-
-            <p className="text-center text-xs text-gray-400">
-              🔒 Pagamento 100% seguro via Mercado Pago
-            </p>
+        {/* COLUNA DIREITA — só desktop */}
+        <div className="hidden lg:block lg:col-span-2">
+          <div className="sticky top-6">
+            <Resumo />
           </div>
         </div>
+
       </div>
     </div>
   )
